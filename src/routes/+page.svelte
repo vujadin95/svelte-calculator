@@ -3,77 +3,73 @@
   const operations = ["/", "x", "+", "-", "="];
 
   let selectedOperation = "";
-  let display = "";
-  let firstNumber = "";
-  let secondNumber = "";
+  let display = "0";
+  let firstValue = "";
+  let secondValue = "";
   let isDisplayedResults = false;
 
-  const handleOperationClick = (operation: string) => {
-    if (!firstNumber) return;
-    if (operation === "=") {
-      if (!secondNumber) return;
-      const firstNum = parseInt(firstNumber);
-      const secondNum = parseInt(secondNumber);
-      let results = "";
-      switch (selectedOperation) {
-        case "/":
-          results = (firstNum / secondNum).toFixed(2);
-          break;
-        case "x":
-          results = (firstNum * secondNum).toFixed(2);
-          break;
-        case "+":
-          results = (firstNum + secondNum).toFixed(2);
-          break;
-        case "-":
-          results = (firstNum - secondNum).toFixed(2);
-          break;
-      }
-      display = results;
-
-      isDisplayedResults = true;
+  const calculate = () => {
+    const firstNum = parseFloat(firstValue);
+    const secondNum = parseFloat(secondValue);
+    console.log(firstNum, secondNum);
+    let result: number = 0;
+    switch (selectedOperation) {
+      case "/":
+        result = firstNum / secondNum;
+        break;
+      case "x":
+        result = firstNum * secondNum;
+        break;
+      case "+":
+        result = firstNum + secondNum;
+        break;
+      case "-":
+        result = firstNum - secondNum;
+        break;
     }
-    selectedOperation = operation;
+    return Number.isInteger(result) ? result.toString() : result.toFixed(4);
   };
 
-  const handleClear = () => {
-    firstNumber = "";
-    secondNumber = "";
-    selectedOperation = "";
-    display = "";
-    isDisplayedResults = false;
+  const handleOperation = (operant: string) => {
+    if (!firstValue) return;
+    if (operant === "=") {
+      if (!secondValue) return;
+      display = calculate();
+      isDisplayedResults = true;
+    } else {
+      display = "0";
+      selectedOperation = operant;
+    }
   };
-
-  const handleNumberClick = (number: string) => {
+  const handleNumberInput = (number: string) => {
     if (isDisplayedResults) {
       handleClear();
     }
-    if (display === "" && number === "0") return;
     if (number === "." && display.includes(".")) return;
-    if (display === "" && number === ".") {
+
+    if (display === "0" && number === ".") {
       return (display = "0.");
     }
     if (!selectedOperation) {
-      if (display === "" && number === ".") {
-        firstNumber = "0.";
-        return (display = firstNumber);
-      }
-      firstNumber = `${firstNumber}${number}`;
-      display = firstNumber;
+      firstValue = display === "0" ? number : `${display}${number}`;
+      display = firstValue;
     } else {
-      if (display === "" && number === ".") {
-        secondNumber = "0.";
-        return (display = secondNumber);
-      }
-      secondNumber = `${secondNumber}${number}`;
-      display = secondNumber;
+      secondValue = display === "0" ? number : `${display}${number}`;
+      display = secondValue;
     }
+  };
+  const handleClear = () => {
+    display = "0";
+    selectedOperation = "";
+    firstValue = "";
+    secondValue = "";
+    isDisplayedResults = false;
   };
 </script>
 
 <main>
   <div class="calculator">
-    <div class="results">
+    <div class="result">
       {display}
     </div>
     <div class="digits">
@@ -82,7 +78,7 @@
         <button class="btn btn-xlg" on:click={handleClear}> C </button>
         {#each numbers as number (number)}
           <button
-            on:click={() => handleNumberClick(number)}
+            on:click={() => handleNumberInput(number)}
             class={`btn ${number === "0" ? "btn-lg" : null}`}
             >{number}
           </button>
@@ -92,7 +88,7 @@
       <div class="operations">
         {#each operations as operation (operation)}
           <button
-            on:click={() => handleOperationClick(operation)}
+            on:click={() => handleOperation(operation)}
             class={`btn ${
               selectedOperation === operation ? "btn-silver" : "btn-orange"
             }`}>{operation}</button
@@ -104,44 +100,63 @@
 </main>
 
 <style>
+  :global(*) {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
   main {
     width: 100vw;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: "Poppins", sans-serif;
   }
   .calculator {
     background-color: rgb(28, 28, 28);
-    width: 240px;
+    width: 300px;
     padding: 15px;
     border-radius: 7px;
+    -webkit-box-shadow: 20px 20px 100px -6px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 20px 20px 100px -6px rgba(0, 0, 0, 0.5);
+    box-shadow: 20px 20px 100px -6px rgba(0, 0, 0, 0.5);
   }
   .digits {
+    width: 100%;
     display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
   }
   .operations {
     display: flex;
     flex-direction: column;
+    width: 25%;
+    gap: 10px;
   }
   .numbers {
-    display: flex;
-    flex-wrap: wrap;
-    width: 200px;
+    width: 75%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
   }
   .btn {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 100px;
     background-color: rgb(114, 113, 113);
     font-size: 20px;
     font-weight: bold;
     color: white;
-    margin: 5px;
+    /* margin: 5px; */
     border: none;
+    align-self: center;
+    font-family: inherit;
   }
   .btn-lg {
-    width: 110px;
+    width: 100%;
+    grid-column: 1/3;
   }
   .btn-orange {
     background-color: orange;
@@ -150,14 +165,24 @@
     background-color: silver;
   }
   .btn-xlg {
-    width: 170px;
+    width: 100%;
+    grid-column: 1/-1;
   }
-  .results {
-    height: 60px;
+  .result {
+    width: 100%;
+    height: 120px;
     color: white;
-    font-size: 50px;
+    font-size: 40px;
     display: flex;
     flex-direction: row-reverse;
     margin-right: 10px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    padding-right: 5px;
+  }
+  .firstNumber {
+    border-bottom: 1px solid orange;
   }
 </style>
